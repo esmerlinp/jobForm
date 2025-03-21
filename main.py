@@ -4,12 +4,16 @@ import pandas as pd
 import time
 import requests
 import base64
+import json
+from datetime import datetime
 
 # Configuración de la página
 st.set_page_config(page_title="Ofertas de Empleo", layout="wide")
+
+
 global df_ofertas
 df_ofertas = pd.DataFrame()
-
+  
 
 relative_path = './logo.png' 
 full_path = os.path.join(os.getcwd(), relative_path)
@@ -17,14 +21,12 @@ path = os.path.abspath(full_path)
 
 
 _, col2, _= st.columns([0.3, 1, 0.3])
-# with col1:
-#     st.image(f"{path}", width=100)
-    
 
     
 @st.cache_data(ttl=60*60)
 def get_jobs():
-    return pd.read_json("./sample.json")
+    #df = pd.read_json("./sample.json")
+    #return df
     baseUrl = "http://rrhh.administracionapi.camsoft.com.do:8086"
     x_api_key = "AJEFTSLBSUXBTIILJPQKSNNXTETCMFRRWHQSLIHBDJQVBFELRO"
     
@@ -59,11 +61,6 @@ if "jobid" in st.query_params and st.session_state.page != "form":
     st.session_state.jobRequisitionId = st.query_params.jobid
     st.session_state.page = "detail"
     
-
-# if "jobRequisitionId" not in st.session_state:
-#     st.session_state.jobRequisitionId = 0  # Página inicial
-    
-
 
     
 # Función para cambiar de página
@@ -102,7 +99,87 @@ def send_request(data):
         return False    
         
 
+
+
+# Función para renderizar los campos dentro de un contenedor
+def render_custom_fields_in_container(fields):
+    print(fields)
+    fields = sorted(fields, key=lambda x: x['order'])  # Ordenar por el campo "order"
+    form_data = {}
+    
+
+
+    container = st.container()  # Crear un contenedor
+    with container:
+        for field in fields:
+            fieldName =  field.get("fieldName")
+            field_type = field.get("typename", "")
+            label = field.get("label")
+            value = field.get("value", "")
+            placeholder = field.get("placeHolder", "")
+            options = field.get("options", [])
+            required = field.get("required", False)
+
+            if field_type == "text_input":
+                form_data[field["fieldName"]] = st.text_input(
+                    key= fieldName,
+                    label=label,
+                    value=value if value else None,
+                    placeholder=placeholder,
+                    help="Este campo es requerido" if required else None
+                )
+            elif field_type == "text_area":
+                form_data[field["fieldName"]] = st.text_area(
+                    key= fieldName,
+                    label=label,
+                    value=value if value else None,
+                    placeholder=placeholder,
+                    help="Este campo es requerido" if required else None
+                )
+            elif field_type == "number_input":
+                form_data[field["fieldName"]] = st.number_input(
+                    key= fieldName,
+                    label=label,
+                    value=value if value else 0,
+                    step=1,
+                    placeholder=placeholder,
+                    help="Este campo es requerido" if required else None
+                )
+            elif field_type == "select":
+                opc = [x['value'] for x in options]
+                print(opc)
+                form_data[field["fieldName"]] = st.selectbox(
+                    key= fieldName,
+                    label=label,
+                    options=opc,
+                    index=opc.index(value) if value in opc else 0,
+                    help="Este campo es requerido" if required else None,
+                )
+            elif field_type == "select_multiple":
+                opc = [x['value'] for x in options]
+                print(opc)
+                form_data[field["fieldName"]] = st.multiselect(
+                    key= fieldName,
+                    label=label,
+                    options=opc,
+                    help="Este campo es requerido" if required else None,
+                )
+            elif field_type == "date":
+                form_data[field["fieldName"]] = st.text_input(
+                    key= fieldName,
+                    label=label,
+                    value= datetime.today().strftime("%d-%m-%Y"),
+                    placeholder="dd-mm-yyyy ej. 31-12-2025",
+                    help="Este campo es requerido" if required else None,
+                )
+                
+        st.session_state.customFields = json.dumps(form_data)
+       
+    return container
+
 with col2:
+
+
     # Navegación basada en el estado de la sesión
     if st.session_state.page == "home":
         st.title("Ofertas de Empleo")
@@ -149,18 +226,7 @@ with col2:
                             st.query_params.jobid = oferta['id']
                             switch_page("detail")
                             st.rerun()
-                            
-                    # st.write(f"**Empresa:** {oferta['companyName']}")
-                    # st.write(f"**Descripción:** {oferta['description']}")
-                    # st.write("**Responsabilidades**")
-                    # st.markdown(oferta['responsibilities'])
-                    # st.write()
-                    # st.write("**Requisitos**")
-                    # st.markdown(oferta['requirements'])
-
-                    
-                    
-            
+                                        
         else:
             st.write("No hay ofertas de empleos")
             
@@ -199,15 +265,18 @@ with col2:
             st.rerun()
             
     elif st.session_state.page == "form":
-        
+        customFields = []
         df = get_jobs() 
         df = df[df["id"] == int(st.session_state.jobRequisitionId)]
         if st.button(":blue[< Atrás]", type="tertiary"):
             switch_page("detail")  
             st.rerun()
         st.subheader(df["jobTitle"].values[0])
-        #st.markdown(f"**Empresa:** {df['companyName'].values[0]}")
-        #st.write(f"**Descripción:** {df['description'].values[0]}")
+        
+        if "customData" in df.columns:
+            if df["customData"].values[0]:
+                strdata = str(df["customData"].values[0])
+                customFields= json.loads(strdata)
         
         paises = (
                     "1-Republica Dominicana",
@@ -278,76 +347,39 @@ with col2:
             lastName = l.text_input(":red[*] Primer Apellido", placeholder="ej. Doe")
             surname = s.text_input("Segundo Apellido", placeholder="ej. Smith")
             
-            gender = st.selectbox(":red[*] Género", ("1-Masculino", "2-Femenino"))
+            #gender = st.selectbox(":red[*] Género", ("1-Masculino", "2-Femenino"))
             birthDate = st.date_input(":red[*] Fecha de Nacimiento")
-            maritalStatus = st.selectbox("Estado Civil", ("Soltero", "Casado", "Unión Libre"))
+            #maritalStatus = st.selectbox("Estado Civil", ("Soltero", "Casado", "Unión Libre"))
 
             # Identificación
             st.caption("Identificación")
             identificationType = st.selectbox("Tipo de identificación", ("1-Cédula", "5-Pasaporte"))
             identificationNumber = st.text_input(":red[*] Número de Identificación", placeholder="ej. 00100013305")
 
-            # Lugar de Nacimiento y Nacionalidad
-            st.caption("Lugar de Nacimiento y Nacionalidad")
-            birthCountry = st.selectbox("Lugar de Nacimiento", paises)
-            nationality = st.selectbox(":red[*] Nacionalidad", nacionalidades)
-
             # Educación
-            st.caption("Educación")
+
             educationLevelId = st.selectbox(":red[*] Nivel Educativo", grados_academicos)
-            experience = st.selectbox(":red[*]¿Cuántos años de experiencia profesional tienes en tu campo de especialización? (Cuenta solo las experiencias postuniversitarias, remuneradas a tiempo completo. Por favor, excluya las pasantías, los puestos a tiempo parcial o los proyectos académicos.)", ("1", "2", "3", "4", "5", "6", "7", "8", "9", "10+"))
-            degrees = st.text_area(label="Por favor, enumere su título universitario y su institución. En caso de que sea seleccionado para el puesto, tenga en cuenta que una oferta de trabajo dependerá de la confirmación de esta información a través de una verificación de antecedentes.", placeholder="Enter")
-            # Residencia
-            
-            st.caption("Residencia")
-            residenceCountry = st.selectbox(":red[*] ¿En qué país te encuentras?", paises)
-            residenceCity = st.text_input(":red[*] ¿En qué ciudad te encuentras? (Por favor, añada también Estado/Provincia cuando corresponda)", placeholder="Enter")
             mobilePhone = st.text_input(":red[*] Teléfono Celular", placeholder="ej. 18090009999")
             email = st.text_input("Correo Electrónico", placeholder="ej. ejemplo@correo.com")
-            linkedInUrl = st.text_input("LinkedIn URL*", placeholder="Enter")
             uploaded_file = st.file_uploader(":red[*] Resume/CV", type=['doc', 'pdf', 'docx', "png", "jpg", "txt", "bmp"])
 
+            if customFields:    
+                container = render_custom_fields_in_container(customFields)
 
-            currentCompany = st.text_input(label=":red[*] Empresa actual", placeholder="Enter")
-            currentSalary = st.number_input(
-                label="Salario actual",
-                min_value=0.0,  # Valor mínimo
-                max_value=1_000_000.0,  # Valor máximo
-                step=0.01,  # Incremento de los valores
-                format="%.2f"  # Formato para mostrar dos decimales
-            )
-            desiredSalary = st.number_input(
-                label="Salario deseado",
-                min_value=0.0,  # Valor mínimo
-                max_value=1_000_000.0,  # Valor máximo
-                step=0.01,  # Incremento de los valores
-                format="%.2f"  # Formato para mostrar dos decimales
-            )
-            compromise = st.selectbox(":red[*] ¿Cuándo puedes empezar? *", ('Inmediatamente', '1 Semana', '2 Semanas', '3 Semanas', '4 Semanas', '5 Semanas', '6 Semanas', '7 Semanas', '8 Semanas', '9 Semanas', '10 Semanas'))
-            additionalInfo = st.text_area(label="Información adicional (añade una carta de presentación o cualquier otra cosa que quieras compartir)", placeholder="Enter")
-           
+            
+            #st.write(form_data)
+                    
 
 
             # Every form must have a submit button.
             submitted = st.form_submit_button("Submit")
+            
             if submitted:
-                
-                customData = {
-                    "gender": gender.split("-")[1],
-                    "maritalStatus": maritalStatus,
-                    "nationality": nationality.split("-")[1],
-                    "residenceCountry": residenceCountry.split("-")[1],
-                    "residenceCity": residenceCity,
-                    "experience": experience,
-                    "degrees": degrees,
-                    "linkedInUrl": linkedInUrl,
-                    "currentCompany": currentCompany,
-                    "currentSalary": currentSalary,
-                    "desiredSalary": desiredSalary,
-                    "birthCountry": birthCountry.split("-")[1],
-                    "additionalInfo":additionalInfo,
-                    "compromise": compromise
-                }
+                for i, field in enumerate(customFields):
+                    ssession_data = json.loads(st.session_state.customFields)
+                    if field['fieldName'] in ssession_data:
+                        customFields[i]["value"] = ssession_data[field['fieldName']]
+
                 data = {
                     "jobRequisitionId": int(st.session_state.jobRequisitionId),
                     "identificationType": int(identificationType.split("-")[0]),
@@ -360,16 +392,11 @@ with col2:
                     "mobilePhone": mobilePhone,
                     "attachedDocument": None,
                     "fileExtension": "",
-                    "maritalStatus": maritalStatus,
-                    "gender": gender.split("-")[1],
-                    "nationality": nationality.split("-")[1],
-                    "birthDate": birthDate.strftime("%Y-%m-%d"),
-                    "birthCountry": birthCountry.split("-")[1],
                     "email": email,
-                    "residenceCountry": residenceCountry.split("-")[1],
-                    "residenceCity": residenceCity,
-                    "customData": customData
+                    "customData": json.dumps(customFields)
                 }
+                
+                st.json(data)
                 
                 # Campos requeridos con nombres descriptivos
                 required_fields = {
@@ -380,14 +407,7 @@ with col2:
                     "lastName": "Segundo Nombre",
                     "educationLevelId": "Nivel Educativo",
                     "mobilePhone": "📱 Teléfono Celular",
-                    "gender": "Genero",
-                    "nationality": "Nacionalidad",
-                    "birthDate": "Fecha de Nacimiento",
-                    "birthCountry": "País de Nacimiento",
                     "email": "Correo Electrónico",
-                    "residenceCountry": "País de Residencia",
-                    "residenceCity": "Ciudad de Resicencia",
-                    "maritalStatus": "Estado Civil",
                     "attachedDocument": "Resumen CV"
                 }
                 
@@ -402,12 +422,24 @@ with col2:
                 
                 # Validación de campos requeridos
                 error = None
-                for field, field_name in required_fields.items():
-                    value = data.get(field)
-                    if value is None or (isinstance(value, str) and not value.strip()):
-                        error = f"{field_name} es requerido."
-                        break
                 
+
+                
+                for field, field_name in required_fields.items():
+                    if field_name == "customData":
+                        for item in data["customData"]:
+                            val = item["value"]
+                            st.write(item)
+                            if item["required"] and (val is None or (isinstance(val, str) and not val.strip())):
+                                error = f"{item['fieldName']} es requerido."
+                                break
+                    else:
+                        value = data.get(field)
+                        if value is None or (isinstance(value, str) and not value.strip()):
+                            error = f"{field_name} es requerido."
+                            break
+                   
+                    
                 if error:
                     st.error(error)  
                 else:
