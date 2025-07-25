@@ -54,4 +54,4 @@ stages:
           az containerapp update \
             --name $(containerAppName) \
             --resource-group $(resourceGroup) \
-            --image $(dockerRegistryServiceConnection)/$(imageRepository):$(Build.BuildId)
+            --image $(containerRegistry)/$(imageRepository):$(Build.BuildId)
