@@ -50,6 +50,7 @@ coverage.xml
 .pytest_cache/
 
 .venv/
+secrets.toml
 
 # Translations
 *.mo
