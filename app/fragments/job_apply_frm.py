@@ -2,7 +2,7 @@ import streamlit as st
 import json
 from openai import OpenAI
 import time
-from app.util import render_custom_fields_in_container, leer_pdf
+from app.util import render_custom_fields_in_container, leer_pdf, file_to_base64
 from app.core.api_jobs import apply_job_offert
 
 client = OpenAI(api_key=st.secrets["openai_api_key"])  # or set OPENAI_API_KEY in your environment
@@ -34,9 +34,13 @@ Si la información **sí corresponde a un currículum vitae**, genera un diccion
     "id_GradoAcademico: ""
 }
 
-Llena los valores con los datos que correspondan del currículum (por ejemplo, nombre, teléfono, correo). Para el campo "etiqueta" agrega alguna cualidad destacada del solicitante basada en su perfil profesional. En el campo "comentario" incluye una valoración breve y objetiva del solicitante basada en la información del currículum y los datos del puesto a aplicar, coloca un :) si la valoracion es positiva y una :( sino es asi. No cambies las claves ni agregues nuevas. Si algún dato no está disponible, deja el valor como null.
+Llena los valores con los datos que correspondan del currículum (por ejemplo, nombre, teléfono, correo). 
+Para el campo "etiqueta" agrega alguna cualidad(hashstag separados por comas, ej: #liderazgo, #) destacada del solicitante basada en su perfil profesional. 
+En el campo "comentario" incluye una valoración breve y objetiva del solicitante basada en la información del currículum y los datos del puesto a aplicar, coloca un ✅ si la valoracion es positiva y una ❌ sino es asi. 
 Para tipo_Identificacion (numerico entero) poner valor entero 1 si identificacion es cédula, 2 si es pasaporte, y null si identificacion está vacío o es nulo
 Para el campo id_GradoAcademico elige de los sigrientes valores enteros   1 para Secundaria, 2 Bachillerato, 3 Técnico, 4 Licenciatura, 5 para Maestría , 6 para Doctorado .
+No cambies las claves ni agregues nuevas. 
+Si algún dato no está disponible, deja el valor como null.
 **La respuesta debe contener únicamente el diccionario JSON solicitado, sin sugerencias, explicaciones ni datos adicionales.**
 """
 
@@ -119,7 +123,7 @@ def apply_job(job, company_id):
         else:
             
             #validar los campos del dict que son null y solicitarlos al usuario
-            st.caption("Campos obligatorios que faltan en tu CV")
+            st.write_stream(generate_response("Campos obligatorios que faltan en tu CV"))
             for key in st.session_state.payload.keys():
                
                 if st.session_state.payload[key] is None or st.session_state.payload[key] == "":
@@ -175,18 +179,35 @@ def apply_job(job, company_id):
         st.session_state.payload["id_Departamento"] = job["department_id"]
         st.session_state.payload["nombre_Departamento"] = job["department_name"]
         st.session_state.payload["nombre_Supervisor"] = job["supervisor_name"]
-        st.session_state.payload["customData"] = json.dumps(customFields)
-            
+        st.session_state.payload["ExtraCustomData"] = json.dumps(customFields)
+   
+    
         
+                    
+        # Convertir archivo a base64
+        file_base64 = file_to_base64(uploaded_file)
+        file = {}
+        file["attachedDocument"] = file_base64
+        file["fileExtension"] = uploaded_file.type.split("/")[1]
 
         
-        st.json(st.session_state.payload)
-        response = apply_job_offert(data=st.session_state.payload)
+        
+
+        #st.json(st.session_state.payload)
+        response = None
+        with st.spinner("Porfavor espere ..."):
+            response = apply_job_offert(data=st.session_state.payload, file=file)
+            
         if response.get("error"):
             st.error("No se pudo crear la solicitud")
         else:
             st.success("Solicitud enviada correctamente.")
-        
+            if st.button("Cerrar"):
+                for key in st.session_state.keys():
+                    del st.session_state[key]
+                
+                time.sleep(2)
+                st.rerun()
         # data = json.dumps(customFields)
         # for item in data:
         #    val = item["value"]
