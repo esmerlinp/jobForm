@@ -1,5 +1,5 @@
 # Usa la imagen base de Python para Apple Silicon
-FROM python:3.9-slim
+FROM python:3.11-slim
 
 # Configura el directorio de trabajo en el contenedor
 WORKDIR /app
