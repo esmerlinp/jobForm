@@ -87,12 +87,10 @@ def fetch_data(endpoint, method="GET", params=None, body_params=None, headers=No
 
 
 @st.cache_data(ttl=60*60)
-def fetch_jobs_offers(company_id, job_id) -> list[JobModel]:
+def fetch_jobs_offers(company_id, job_id=None) -> list[JobModel] | JobModel:
     try:
 
-        query_params = {
-            "sfilter": json.dumps([["id", "=", job_id], ["ind_Estado", "=","3"]])
-        }
+        query_params = {"sfilter": json.dumps([["id", "=", job_id], ["ind_Estado", "=","3"]])} if job_id else None
         
         # Fetching job postings from the API
         
@@ -126,6 +124,8 @@ def fetch_jobs_offers(company_id, job_id) -> list[JobModel]:
                 
                 jobs.append(job) 
 
+        if job_id:
+            return jobs[0]
            
         return jobs
     except Exception as e:
