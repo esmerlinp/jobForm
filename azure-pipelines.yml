@@ -42,7 +42,7 @@ stages:
 
     - task: AzureCLI@2
       inputs:
-        azureSubscription: 'Azure subscription'
+        azureSubscription: 'Triple Connection'
         scriptType: bash
         scriptLocation: inlineScript
         inlineScript: |
