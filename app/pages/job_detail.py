@@ -29,21 +29,21 @@ def get_job(job_id) -> JobModel:
 
     
 
-def job_detail(job_id, company_id):
-    jobs = []
-    job = {}
+def job_detail(job:JobModel, company_id):
+    # jobs = []
+    # job = {}
     
-    with st.spinner("Cargando detalles del empleo..."):
-        #job = get_job(job_id)
-        jobs = fetch_jobs_offers(job_id=job_id, company_id=company_id)
+    # with st.spinner("Cargando detalles del empleo..."):
+    #     #job = get_job(job_id)
+    #     jobs = fetch_jobs_offers(job_id=job_id, company_id=company_id)
         
-        if jobs:
-            job = jobs[0]
-            job.customData = '[{"label":"Tiene Vehículo propio","fieldName":"vehiculopropio","type":3,"typename":"select_multiple","placeHolder":"Seleccione Si o No dependiendo de si tiene o no un vehiculo","required":false,"options":[{"value":"Si","text":"Si"},{"value":"No","text":"No"}],"validationRules":{},"order":1,"value":[]}]'
+    #     if jobs:
+    #         job = jobs[0]
+    #         job.customData = '[{"label":"Tiene Vehículo propio","fieldName":"vehiculopropio","type":3,"typename":"select_multiple","placeHolder":"Seleccione Si o No dependiendo de si tiene o no un vehiculo","required":false,"options":[{"value":"Si","text":"Si"},{"value":"No","text":"No"}],"validationRules":{},"order":1,"value":[]}]'
 
-        else:
-            st.info("No hay ofertas de empleo") 
-            return
+    #     else:
+    #         st.info("No hay ofertas de empleo") 
+    #         return
         
            
     st.title(job.job_title)
@@ -51,7 +51,7 @@ def job_detail(job_id, company_id):
 
 
     st.header("Acerca del empleo")
-    st.image("https://images.unsplash.com/photo-1504384308090-c894fdcc538d?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1470&q=80", use_container_width=True)
+    #st.image("https://images.unsplash.com/photo-1504384308090-c894fdcc538d?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1470&q=80", use_container_width=True)
     st.caption(f"América Latina · {job.workMode} · {job.contract_type_name} · {job.salary} DOP$/Mes")
 
     
