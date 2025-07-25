@@ -2,6 +2,7 @@ import streamlit as st
 from datetime import datetime
 import pdfplumber
 import json
+import base64
 
 def leer_pdf(file_obj) -> str:
     texto = ""
@@ -20,6 +21,11 @@ def leer_pdf_from_path(path):
     return texto
 
 
+
+def file_to_base64(file):
+    return base64.b64encode(file.read()).decode("utf-8")
+   
+   
 # Función para renderizar los campos dentro de un contenedor
 def render_custom_fields_in_container(fields, requeridos=False):
     print(fields)

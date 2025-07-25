@@ -182,40 +182,54 @@ def fetch_jobs_offer_by_id(job_id, company_id) -> list[JobModel]:
     
 
 
-def apply_job_offert(data: dict):
-    
-    
-    
+def apply_job_offert(data: dict, file:dict):
+
     payload = {
-        "tipo_Identificacion": data['tipo_Identificacion'],         # Ejemplo, fijo o de otro origen
-        "identificacion": data["identificacion"],
-        "id_Compania": data["id_Compania"],                 # No está en JobModel, poner fijo o obtener de otro dato
-        "primer_Nombre": data["primer_Nombre"],        # No está en JobModel
-        "segundo_Nombre": data["segundo_Nombre"],        # No está en JobModel
-        "primer_Apellido": data["primer_Apellido"],    # No está en JobModel
-        "segundo_Apellido": data["segundo_Apellido"],    # No está en JobModel
-        "nombre_Completo": data["nombre_Completo"],   
-        "comentario": data["comentario"], 
-        "email": data["email"],                       # No está en JobModel
-        "telefono":data["telefono"],          # No está en JobModel
-        "id_GradoAcademico": data["id_GradoAcademico"],            # No está en JobModel
-        "etiqueta": data["etiqueta"],
-        "id_Requisicion": data["id_Requisicion"],
-        "id_Supervisor": None,  # No está supervisor id, solo nombre
-        "id_Departamento": data["id_Departamento"],
-        #"ind_Estado": 1,     # Valor fijo ejemplo
-        #"ind_Etapa": 1268,   # Valor fijo ejemplo
-        "apreciacion": 0,    # Valor fijo ejemplo
-        "origen_Solicitante": 2,  # Valor fijo ejemplo
-        "nombre_Departamento": data["nombre_Departamento"],
-        "nombre_Supervisor": data["nombre_Supervisor"],
-        "customData": data["customData"]
+        "solicitud_model": {
+                "tipo_Identificacion": data['tipo_Identificacion'],         # Ejemplo, fijo o de otro origen
+                "identificacion": data["identificacion"],
+                "id_Compania": data["id_Compania"],                 # No está en JobModel, poner fijo o obtener de otro dato
+                "primer_Nombre": data["primer_Nombre"],        # No está en JobModel
+                "segundo_Nombre": data["segundo_Nombre"],        # No está en JobModel
+                "primer_Apellido": data["primer_Apellido"],    # No está en JobModel
+                "segundo_Apellido": data["segundo_Apellido"],    # No está en JobModel
+                "nombre_Completo": data["nombre_Completo"],   
+                "comentario": data["comentario"], 
+                "email": data["email"],                       # No está en JobModel
+                "telefono":data["telefono"],          # No está en JobModel
+                "id_GradoAcademico": data["id_GradoAcademico"],            # No está en JobModel
+                "etiqueta": data["etiqueta"],
+                "id_Requisicion": data["id_Requisicion"],
+                "id_Supervisor": None,  # No está supervisor id, solo nombre
+                "id_Departamento": data["id_Departamento"],
+                "apreciacion": 0,    # Valor fijo ejemplo
+                "origen_Solicitante": 2,  # Valor fijo ejemplo
+                "nombre_Departamento": data["nombre_Departamento"],
+                "nombre_Supervisor": data["nombre_Supervisor"],
+                "ExtraCustomData": data["ExtraCustomData"],
+                "customData": {}
+            },
+        "archivo_model": {
+            "IdSolicitud": 0,
+            "archivoNombre": "",
+            "Extension": f".{file['fileExtension']}",
+            "FileName":"", #Nombre corto del archivo, requerido si se pasa en base64 o buytes
+            "ArchivoInBase64": None,
+            "ArchivoInBytes":file["attachedDocument"],
+            "clasificacionId": 1, #cv,
+            "archivoTamano": len(file["attachedDocument"]),
+            "unidadMedida": 2, 
+            
+        }  
     }
     
-    print(payload)
+
         
     
-    response = fetch_data(endpoint="reclutamiento/External/SolicitudEmpleo", method="POST", body_params=[payload])
+    response = fetch_data(endpoint="reclutamiento/External/SolicitudEmpleo", method="POST", body_params=payload)
+    #payload["archivo_model"]["ArchivoInBase64"] = payload["archivo_model"]["ArchivoInBase64"][:50]
+    # print(payload)
+    # print(response)
     if response.get("error", None):
         return response
 
