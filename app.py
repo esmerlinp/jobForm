@@ -2,7 +2,6 @@ import streamlit as st
 from app.core.api_jobs import fetch_jobs_offers
 import streamlit_antd_components as sac
 from app.pages.job_detail import job_detail
-import requests
 from streamlit_extras.row import row
 
 st.set_page_config(
