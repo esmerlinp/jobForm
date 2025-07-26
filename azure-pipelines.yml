@@ -17,6 +17,7 @@ variables:
   resourceGroup: 'Triple-Dev-RG'
   dockerfilePath: '$(Build.SourcesDirectory)/Dockerfile'
   tag: '$(Build.BuildId)'
+  OPENAI_API_KEY: $(OPENAI_API_KEY)
 
   # Agent VM image name
   vmImageName: 'ubuntu-latest'
@@ -54,4 +55,5 @@ stages:
           az containerapp update \
             --name $(containerAppName) \
             --resource-group $(resourceGroup) \
-            --image $(dockerRegistryServiceConnection)/$(imageRepository):$(Build.BuildId)
+            --image $(dockerRegistryServiceConnection)/$(imageRepository):$(Build.BuildId) \
+            --set-env-vars OPENAI_API_KEY=$(OPENAI_API_KEY)
