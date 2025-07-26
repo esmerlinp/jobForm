@@ -1,11 +1,12 @@
 import streamlit as st
-import json
+import json, os
 from openai import OpenAI
 import time
 from app.util import render_custom_fields_in_container, leer_pdf, file_to_base64
 from app.core.api_jobs import apply_job_offert
 
-client = OpenAI(api_key=st.secrets["openai_api_key"])  # or set OPENAI_API_KEY in your environment
+openai_api_key = os.getenv('OPENAI_API_KEY')
+client = OpenAI(api_key=openai_api_key)  # or set OPENAI_API_KEY in your environment
 
 
 customFields = []

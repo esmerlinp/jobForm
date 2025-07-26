@@ -29,12 +29,15 @@ def fetch_data(endpoint, method="GET", params=None, body_params=None, headers=No
         }
           
         url = f"http://rrhh.administracionapi.camsoft.com.do:8086/{endpoint}"
-            
-            
-      
         
-
-
+  
+            
+   
+        # aviat.triple.com.do/jobs -> jobs.triple.com.do
+        
+        # obtergo : aviat.triple.com.do/jobs
+        # nomina.trim
+        
         #print(f"Request domain: {headers['x-ui-domain']}")
         
      
