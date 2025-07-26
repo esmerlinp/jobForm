@@ -47,13 +47,8 @@ stages:
         scriptType: bash
         scriptLocation: inlineScript
         inlineScript: |
-          echo "checking Azure Account"
-          az account show --output table
-          echo "checking container App Existence"
-          az containerapp show --name triple-dev-jobs --resource-group Triple-Dev-RG --output json
-          
-          az containerapp update \
+           az containerapp update \
             --name $(containerAppName) \
             --resource-group $(resourceGroup) \
-            --image $(dockerRegistryServiceConnection)/$(imageRepository):$(Build.BuildId) \
+            --image $(containerRegistry)/$(imageRepository):$(Build.BuildId) \
             --set-env-vars OPENAI_API_KEY=$(OPENAI_API_KEY)
